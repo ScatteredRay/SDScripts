@@ -13,11 +13,11 @@ stdenv.mkDerivation rec {
 
   pyenv = (python.withPackages (ps: with ps; [
     torch
-    torchvision 
+    torchvision
     xformers
     bitsandbytes
     tensorboard
-    tensorflow-bin
+    tensorflow
     tkinter
     #gradio
   ]));
