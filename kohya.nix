@@ -1,4 +1,9 @@
-{ rocmSupport ? false, cudaSupport ? !rocmSupport, pkgs ? import ../nixpkgs { config.cudaSupport = cudaSupport;  }, stdenv ? pkgs.stdenv,  } :
+{
+  rocmSupport ? false,
+  cudaSupport ? !rocmSupport,
+  pkgs ? import ./rocmpkgs.nix { inherit rocmSupport cudaSupport; },
+  stdenv ? pkgs.stdenv
+} :
 stdenv.mkDerivation rec {
   pname = "kohya_ss";
   version = "0.01";
@@ -6,19 +11,9 @@ stdenv.mkDerivation rec {
 
   python = pkgs.python3;
 
-  # torch inherits pkgs.config.cudaSupport
-  torch = if rocmSupport
-          then python.pkgs.torchWithRocm
-          else if cudaSupport
-          then python.pkgs.torchWithCuda
-          else python.pkgs.torchWithoutCuda;
-
-  xformers = python.pkgs.xformers.override { inherit torch; };
-  bitsandbytes = python.pkgs.bitsandbytes.override { inherit torch; };
-
   pyenv = (python.withPackages (ps: with ps; [
     torch
-    #torchvision
+    torchvision 
     xformers
     bitsandbytes
     tensorboard
