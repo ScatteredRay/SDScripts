@@ -16,13 +16,16 @@ import <nixpkgs> {
                     then final.magma-cuda-static
                     else final.magma;
           };
-          torchvision-bin = (prevPy.torchvision-bin.overrideAttrs (old: {
+          torchvision-bin =
+            if rocmSupport
+            then (prevPy.torchvision-bin.overrideAttrs (old: {
             src = final.fetchurl {
               name = "torchvision-0.15.2-cp310-cp310-manylinux2014_aarch64.whl";
               url = "https://download.pytorch.org/whl/torchvision-0.15.2-cp310-cp310-manylinux2014_aarch64.whl";
               hash = "sha256-Hu/r9fvQGpX+jwA9Yj2UFgHJS1zsVHtCDaics2nZz5Y=";
             };
-          })).override { torch-bin = finalPy.torch; };
+            })).override { torch-bin = finalPy.torch; }
+            else prevPy.torchvision-bin;
           torchvision = finalPy.torchvision-bin; # Don't love this, but this is failing to build with rocm....
           torchsde = prevPy.torchsde.overrideAttrs (old: {
             # Fix for Segfault (free() on invalid pointer)
@@ -35,6 +38,7 @@ import <nixpkgs> {
               "MetricTester"
             ];
           }));
+          tensorflow = finalPy.tensorflow-bin;
         };
       };
     })
