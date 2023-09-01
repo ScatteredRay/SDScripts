@@ -2,7 +2,7 @@
   rocmSupport,
   cudaSupport
 } :
-import ../nixpkgs {
+import <nixpkgs> {
   config.cudaSupport = cudaSupport;
   overlays = [
     (final: prev: {
