@@ -1,7 +1,8 @@
 {
   rocmSupport ? false,
   cudaSupport ? !rocmSupport,
-  pkgs ? import ./rocmpkgs.nix { inherit rocmSupport cudaSupport; },
+  nixpkgs ? import <nixpkgs>,
+  pkgs ? import ./rocmpkgs.nix { inherit nixpkgs rocmSupport cudaSupport; },
   stdenv ? pkgs.stdenv
 } :
 stdenv.mkDerivation rec {
@@ -37,4 +38,12 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [
     pyenv
   ];
+
+  shellHook = ''
+  if [ ! -e /tmp/nix-pytorch-rocm___/amdgpu.ids ]
+  then
+    mkdir -p /tmp/nix-pytorch-rocm___
+    ln -s ${pkgs.libdrm}/share/libdrm/amdgpu.ids /tmp/nix-pytorch-rocm___/amdgpu.ids
+  fi
+  '';
 }

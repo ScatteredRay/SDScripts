@@ -1,7 +1,8 @@
 {
   rocmSupport ? false,
   cudaSupport ? !rocmSupport,
-  pkgs ? import ./rocmpkgs.nix { inherit rocmSupport cudaSupport; },
+  nixpkgs ? import <nixpkgs>,
+  pkgs ? import ./rocmpkgs.nix { inherit nixpkgs rocmSupport cudaSupport; },
   stdenv ? pkgs.stdenv
 } :
 stdenv.mkDerivation rec {
@@ -20,6 +21,7 @@ stdenv.mkDerivation rec {
     tensorflow
     tkinter
     #gradio
+    wandb
   ]));
 
   nativeBuildInputs = [
