@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 828911d0..c02f8cf7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -383,7 +383,7 @@ if (MAGMA_ENABLE_HIP)
+     endif()
+ 
+     set( DEVCCFLAGS  "" )
+-    set(VALID_GFXS "700;701;702;703;704;705;801;802;803;805;810;900;902;904;906;908;909;90c;1010;1011;1012;1030;1031;1032;1033")
++    set(VALID_GFXS "700;701;702;703;704;705;801;802;803;805;810;900;902;904;906;908;909;90c;1010;1011;1012;1030;1031;1032;1033;1036;1100")
+     foreach( GFX ${VALID_GFXS} )
+       if ( GPU_TARGET MATCHES gfx${GFX} )
+ 	set( DEVCCFLAGS ${DEVCCFLAGS} --amdgpu-target=gfx${GFX} )
