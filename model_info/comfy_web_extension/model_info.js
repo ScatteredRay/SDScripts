@@ -1,5 +1,3 @@
-import { app } from "../scripts/app.js";
-import { api } from "../scripts/api.js";
 import { $el } from "../scripts/ui.js";
 
 class ModelInfoAPI {
@@ -35,6 +33,10 @@ class ModelInfo {
     ];
     selectedModel = null;
 
+    constructor(integration) {
+        this.integration = integration;
+    }
+
     createUI() {
         if(this.ownMenu) {
             this.menuContainer = $el("div.comfy-menu", {parent: document.body}, [
@@ -53,16 +55,13 @@ class ModelInfo {
             ]);
         }
         else {
-            this.menuContainer = app.ui.menuContainer;
+            this.menuContainer = this.integration.getMenuContainer();
         }
 
         this.modelButton = $el("button", {
             parent: this.menuContainer,
             textContent: "models",
             onclick: async (ev) => {
-                //let nodeDefs = await api.getNodeDefs();
-                //console.log(nodeDefs.CheckpointLoader);
-                //console.log(nodeDefs.LoraLoader.input.required.lora_name);
                 let modelMenu = new LiteGraph.ContextMenu(this.modelTypes, {
                     event: ev,
                     callback: async (v,e, p) => {
@@ -97,4 +96,18 @@ class ModelInfo {
     }
 };
 
-app.registerExtension(new ModelInfo());
+async function RegisterComfyApp() {
+    const app = (await import("../scripts/app.js")).app;
+    const api = (await import("../scripts/api.js")).api;
+
+    class ComfyIntegration {
+        getMenuContainer() {
+            return app.ui.menuContainer;
+        }
+    };
+    app.registerExtension(new ModelInfo(new ComfyIntegration()));
+}
+
+if(true) {
+    RegisterComfyApp();
+}
