@@ -13,6 +13,9 @@ export const modelTypeMap = {
     },
     "Checkpoint" : {
         "dest" : "checkpoints"
+    },
+    "TextualInversion" : {
+        "dest" : "embeddings"
     }
 };
 
@@ -33,6 +36,18 @@ export async function searchModels(query, types, limit = 10) {
     }
     let models = await (await fetch(url)).json();
     return models.items;
+}
+
+export async function modelFromVersionId(versionId) {
+    let url = new URL(`https://civitai.com/api/v1/model-versions/${versionId}`);
+    let model = await (await fetch(url)).json();
+    return model;
+}
+
+export async function modelFromModelId(modelId) {
+    let url = new URL(`https://civitai.com/api/v1/models/${modelId}`);
+    let model = await (await fetch(url)).json();
+    return model;
 }
 
 
@@ -91,15 +106,42 @@ export function getPathForModel(name, type) {
     return `models/${dest}/${name}`;
 }
 
-export async function getWgetForMeta(meta) {
-    let file = meta.files[0]; // Assuming the first one for now...
+export async function chooseFileForModel(model) {
+    let files = [];
+    if(model.files) {
+        files = model.files;
+    }
+    if(model.modelVersions) {
+        let modelFiles = model.modelVersions.map(x => x.files);
+        files = files.concat.apply(files, modelFiles);
+    }
+    files = files.filter((f) => f.type === "Model");
+    let file = files[0]; // Assuming the first one for now...
+    if(model.type) {
+        file.modelType = model.type;
+    }
+    else if(model.model && model.model.type) {
+        file.modelType = model.model.type;
+    }
+    else {
+        throw Error(`Cannot find type for model, ${model}`);
+    }
+    return file;
+}
+
+export async function getWgetForModel(model) {
+    let file = await chooseFileForModel(model)
     let url = file.downloadUrl;
     let name = file.name;
-    let type = meta.model.type;
+    let type = file.modelType;
+    if(type === undefined) {
+        console.log(model);
+        console.log(file);
+    }
     let dest = getPathForModel(name, type);
-    return `wget "${url}" -O "${dest}"`
+    return `wget -nc "${url}" -O "${dest}"`
 }
 
 export async function getWgetForFile(file) {
-    return await getWgetForMeta(await getModelMetaForFile(file));
+    return await getWgetForModel(await getModelMetaForFile(file));
 }
