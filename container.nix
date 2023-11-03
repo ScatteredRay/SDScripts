@@ -4,21 +4,6 @@
   extra_contents ? []
 } :
 let
-  sshdConfig = pkgs.writeTextFile {
-      name = "sshd_config";
-      destination = "/etc/ssh/sshd_config";
-      text = ''
-#UsePrivilegeSeparation yes
-      '';
-  };
-  fakeNss = pkgs.fakeNss.override {
-    extraPasswdLines = [
-      "sshd:x:1001:1001:sshd user:/sshd:/noshell"
-    ];
-    extraGroupLines = [
-      "sshd:!:1001:"
-    ];
-  };
   userNss = pkgs.symlinkJoin {
     name = "user-nss";
     paths = [
@@ -43,21 +28,26 @@ let
       '')
     ];
   };
+  startScript = pkgs.writeShellScriptBin "start.sh" ''
+  mkdir -p /root/.ssh
+  echo $PUBLIC_KEY >> /root/.ssh/authorized_keys
+  chmod 700 /root/.ssh/authorized_keys
+  ssh-keygen -A
+  /bin/sshd -D
+  '';
 in
 pkgs.dockerTools.buildLayeredImage {
   name = name;
   tag = "latest";
   contents = [
     pkgs.openssh
-    pkgs.hello
     pkgs.bashInteractive
     pkgs.coreutils
     userNss
-    #sshdConfig
+    startScript
   ] ++ extra_contents;
   config = {
 
-    Cmd = [
-      "/bin/bash" "-c" "mkdir -p /root/.ssh && echo \"$PUBLIC_KEY\" && echo \"$PUBLIC_KEY\" >> /root/.ssh/authorized_keys && chmod 700 /root/.ssh/authorized_keys && ssh-keygen -A && cat /root/.ssh/authorized_keys && /bin/sshd -D"];
+    Cmd = [ "/bin/start.sh" ];
   };
 }
