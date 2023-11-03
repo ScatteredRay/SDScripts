@@ -56,6 +56,8 @@ pkgs.dockerTools.buildLayeredImage {
     #sshdConfig
   ] ++ extra_contents;
   config = {
-    Cmd = ["/bin/bash" "-c" "ssh-keygen -A && /bin/sshd -D"]; #  -f ${sshdConfig}/etc/ssh/sshd_config
+
+    Cmd = [
+      "/bin/bash" "-c" "mkdir -p /root/.ssh && echo \"$PUBLIC_KEY\" && echo \"$PUBLIC_KEY\" >> /root/.ssh/authorized_keys && chmod 700 /root/.ssh/authorized_keys && ssh-keygen -A && cat /root/.ssh/authorized_keys && /bin/sshd -D"];
   };
 }
