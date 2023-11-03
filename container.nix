@@ -1,5 +1,7 @@
 {
-  pkgs ? import <nixpkgs> {}
+  name ? "container_image",
+  pkgs ? import <nixpkgs> {},
+  extra_contents ? []
 } :
 let
   sshdConfig = pkgs.writeTextFile {
@@ -43,16 +45,16 @@ let
   };
 in
 pkgs.dockerTools.buildLayeredImage {
-  name = "sd_image";
+  name = name;
   tag = "latest";
   contents = [
     pkgs.openssh
     pkgs.hello
-    pkgs.bash
+    pkgs.bashInteractive
     pkgs.coreutils
     userNss
     #sshdConfig
-  ];
+  ] ++ extra_contents;
   config = {
     Cmd = ["/bin/bash" "-c" "ssh-keygen -A && /bin/sshd -D"]; #  -f ${sshdConfig}/etc/ssh/sshd_config
   };

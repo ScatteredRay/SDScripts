@@ -1,8 +1,13 @@
 {
   rocmSupport ? false,
   cudaSupport ? !rocmSupport,
-  nixpkgs ? import <nixpkgs>,
-  pkgs ? import ./rocmpkgs.nix { inherit nixpkgs rocmSupport cudaSupport; },
+  system ? "x86_64-linux",
+  allowUnfree ? true,
+  allowBroken ? false,
+  nixpkgs ? <nixpkgs>,
+  pkgs ? import ./rocmpkgs.nix {
+    inherit nixpkgs system allowUnfree allowBroken rocmSupport cudaSupport;
+  },
   stdenv ? pkgs.stdenv
 } :
 stdenv.mkDerivation rec {
@@ -39,11 +44,16 @@ stdenv.mkDerivation rec {
     pyenv
   ];
 
-  shellHook = ''
+  shellHook = if rocmSupport then ''
   if [ ! -e /tmp/nix-pytorch-rocm___/amdgpu.ids ]
   then
     mkdir -p /tmp/nix-pytorch-rocm___
     ln -s ${pkgs.libdrm}/share/libdrm/amdgpu.ids /tmp/nix-pytorch-rocm___/amdgpu.ids
   fi
+  '' else "";
+
+  installPhase = ''
+    mkdir -p $out
+    cp -r $src/* $out
   '';
 }
