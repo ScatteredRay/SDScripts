@@ -1,9 +1,11 @@
 {
   name ? "container_image",
   pkgs ? import <nixpkgs> {},
-  extra_contents ? []
+  extra_contents ? [],
+  extra_supervisor_config ? ""
 } :
 let
+  supervisor = pkgs.python3.pkgs.supervisor;
   userNss = pkgs.symlinkJoin {
     name = "user-nss";
     paths = [
@@ -28,23 +30,42 @@ let
       '')
     ];
   };
+  supervisorConf = pkgs.writeTextFile {
+    name = "supervisor.conf";
+    text = ''
+    [supervisord]
+    directory=/var/supervisor
+    user=root
+
+    [program:sshd]
+    command=/bin/sshd -D
+    '' + extra_supervisor_config;
+  };
   startScript = pkgs.writeShellScriptBin "start.sh" ''
   mkdir -p /root/.ssh
+  mkdir -p /var/supervisor
   echo $PUBLIC_KEY >> /root/.ssh/authorized_keys
   chmod 700 /root/.ssh/authorized_keys
   ssh-keygen -A
-  /bin/sshd -D
+  ${supervisor}/bin/supervisord -n -c ${supervisorConf}
   '';
 in
 pkgs.dockerTools.buildLayeredImage {
   name = name;
   tag = "latest";
+  fromImage = pkgs.dockerTools.pullImage {
+    imageName = "nvidia/cuda";
+    imageDigest = "latest";
+    sha256 = "";
+  };
   contents = [
     pkgs.openssh
     pkgs.bashInteractive
     pkgs.coreutils
     userNss
     startScript
+    supervisor
+    pkgs.strace
   ] ++ extra_contents;
   config = {
 

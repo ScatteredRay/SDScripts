@@ -25,14 +25,24 @@
             rocmSupport = true;
             cudaSupport = false;
           };
-          ComfyUIImage = import ./container.nix {
+          ComfyUIImage = import ./container.nix rec {
             name = "comfy_image";
             pkgs = import nixpkgs {
               system = "x86_64-linux";
+              config.allowUnfree = true;
             };
             extra_contents = [
+              #pkgs.cudaPackages.cudatoolkit
+              #pkgs.libnvidia-container
+              #pkgs.nvidia-docker # I think we actually want libnvidia-container
+              #pkgs.cudaPackages.nvidia_driver
+              #pkgs.nvidia-persistenced
+              #pkgs.nvidia-settings
+              #pkgs.nvidia-x11
+              #pkgs.linuxPackages.nvidia_x11
               ComfyUI-cuda
             ];
+            extra_supervisor_config = ComfyUI-cuda.supervisorConfig;
           };
           Image = import ./container.nix {
             pkgs = import nixpkgs {

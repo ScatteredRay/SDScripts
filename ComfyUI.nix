@@ -40,6 +40,12 @@ stdenv.mkDerivation rec {
     psutil
   ]));
 
+  # Store path??
+  supervisorConfig = ''
+  [program:comfyui]
+  command=${pyenv}/bin/python3 /ComfyUI/main.py --listen 0.0.0.0 --port 8188
+  '';
+
   nativeBuildInputs = [
     pyenv
   ];
@@ -53,7 +59,8 @@ stdenv.mkDerivation rec {
   '' else "";
 
   installPhase = ''
-    mkdir -p $out
-    cp -r $src/* $out
+    mkdir -p $out/ComfyUI
+    mkdir -p $out/bin
+    cp -r $src/* $out/ComfyUI
   '';
 }
